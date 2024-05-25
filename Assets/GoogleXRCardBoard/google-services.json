@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1059272036943",
+    "firebase_url": "https://vr-ar-editor-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "vr-ar-editor",
+    "storage_bucket": "vr-ar-editor.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059272036943:android:0066d528f686d9bb60503a",
+        "android_client_info": {
+          "package_name": "com.vrareditor.vrareditor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1059272036943-i2camtkp805llvcqg6tjg6i1m1rr5ikf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVP-u-nf_wblFJH24cCAi7BQVx3XolykY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1059272036943-i2camtkp805llvcqg6tjg6i1m1rr5ikf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1059272036943-f916o9cdercmkbfgutu2ti92qddst1jj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.vrareditor.vrareditor"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

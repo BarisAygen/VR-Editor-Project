@@ -238,7 +238,7 @@ public class MakeScriptable : MonoBehaviour {
     private void UpdateNameInFirebase(SyncObject syncObject)
     {
         string objectToJson = JsonUtility.ToJson(syncObject);
-        DatabaseReference reference = FirebaseDatabase.DefaultInstance.GetReference("users").Child(AuthScript.user.UserId);
+        DatabaseReference reference = FirebaseDatabase.DefaultInstance.GetReference("users").Child(AuthScript.user.UserId).Child("worlds").Child(SyncScript.Instance.currentWorldId).Child("objects");
         reference.Child(syncObject.uid).SetRawJsonValueAsync(objectToJson).ContinueWith(task =>
         {
             if (task.IsCompleted)
@@ -296,7 +296,7 @@ public class MakeScriptable : MonoBehaviour {
         {
             firstSync.syncObject.parentUid = secondSync.syncObject.uid; // Update parent UID
             string objectToJson = JsonUtility.ToJson(firstSync.syncObject);
-            DatabaseReference reference = FirebaseDatabase.DefaultInstance.GetReference("users").Child(AuthScript.user.UserId);
+            DatabaseReference reference = FirebaseDatabase.DefaultInstance.GetReference("users").Child(AuthScript.user.UserId).Child("worlds").Child(SyncScript.Instance.currentWorldId).Child("objects");
             reference.Child(firstSync.syncObject.uid).SetRawJsonValueAsync(objectToJson).ContinueWith(task =>
             {
                 if (task.IsCompleted)
@@ -453,6 +453,22 @@ public class MakeScriptable : MonoBehaviour {
         {
             makeScriptableCanvas.SetActive(false);
             inputPanel.SetActive(true);
+        }
+    }
+
+    public IEnumerator InitializeBubblesFromFirebase()
+    {
+        yield return new WaitForSeconds(1); // Wait for objects to load properly
+        foreach (var syncObject in FindObjectsOfType<SynchronousObject>())
+        {
+            if (syncObject.syncObject.isSpeaking)
+            {
+                CreateSpeechBubble(syncObject.syncObject.speakingText, false, syncObject.transform);
+            }
+            else if (syncObject.syncObject.isThinking)
+            {
+                CreateSpeechBubble(syncObject.syncObject.thinkingText, true, syncObject.transform);
+            }
         }
     }
 

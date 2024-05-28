@@ -142,7 +142,7 @@ public class SyncScript : MonoBehaviour {
         FirebaseDatabase.DefaultInstance.GetReference(path).ChildRemoved += ObjectRemoved;
         FirebaseDatabase.DefaultInstance.GetReference(path).ChildChanged += ObjectChanged;
     }
-    
+
     private void ObjectAdded(object sender, ChildChangedEventArgs e)
     {
         if (e.DatabaseError != null)
@@ -292,7 +292,6 @@ public class SyncScript : MonoBehaviour {
         Debug.Log("Database sync set up.");
     }
 
-
     void LoadAddressableObject(string key, SyncObject newItemToScene, Vector3 position, Quaternion rotation, Vector3 scale, Color color)
     {
         Addressables.LoadAssetAsync<GameObject>(key).Completed += handle => {
@@ -317,16 +316,6 @@ public class SyncScript : MonoBehaviour {
                     int currentCount = objectCounts[newItemToScene.addressableKey];
                     string objectName = $"{key}_{currentCount}";
 
-                    if (!string.IsNullOrEmpty(newItemToScene.speakingText))
-                    {
-                        makeScriptable.CreateSpeechBubble(newItemToScene.speakingText, false, instance.transform);
-                    }
-
-                    if (!string.IsNullOrEmpty(newItemToScene.thinkingText))
-                    {
-                        makeScriptable.CreateSpeechBubble(newItemToScene.thinkingText, true, instance.transform);
-                    }
-
                     if (synchronousObject.syncObject.nameChanged != true)
                     {
                         synchronousObject.syncObject.name = objectName;
@@ -343,7 +332,6 @@ public class SyncScript : MonoBehaviour {
                         renderer.material.color = color;
                     }
                     var SelectedObject = instance;
-
 
                     // After instantiating the object, check if it has a parentUid
                     if (!string.IsNullOrEmpty(newItemToScene.parentUid))
@@ -394,7 +382,6 @@ public class SyncScript : MonoBehaviour {
 
     private void Start()
     {
-        //EditorObject.SetActive(false);
         if(allCanvas != null)
         {
             allCanvas.SetActive(false);
@@ -476,7 +463,7 @@ public class SyncScript : MonoBehaviour {
     {
         StartCoroutine(GetScriptableObjects());
 
-        if(allCanvas != null)
+        if (allCanvas != null)
         {
             allCanvas.SetActive(true);
         }
@@ -502,6 +489,17 @@ public class SyncScript : MonoBehaviour {
         scrollViews.Add("vehicle", vehicleScrollView);
         scrollViews.Add("terrain", terrainScrollView);
         scrollViews.Add("custom", customScrollView);
+        StartCoroutine(InitializeWorldData());
+    }
+
+    private IEnumerator InitializeWorldData()
+    {
+        yield return CheckAndFixFirebaseStatus();
+        SetDatabaseSync();
+
+        // Ensure that bubbles are created after all objects are loaded
+        yield return new WaitForSeconds(2); // Wait for 2 seconds to ensure all objects are loaded
+        makeScriptable.InitializeBubblesFromFirebase();
     }
 
     private string IGNORE_RAYCAST_LAYER = "Ignore Raycast";
@@ -618,25 +616,6 @@ public class SyncScript : MonoBehaviour {
             selectedObject = null;
             dragging = false;
             return;
-        }
-    }
-
-    public void MakeObjectScriptable(Transform selectedTransform, bool makeScriptable)
-    {
-        // Assuming selectedTransform is the transform of the object you want to toggle scriptability
-        var syncObjectComponent = selectedTransform.GetComponent<SynchronousObject>();
-        syncObjectComponent.syncObject.isScriptable = makeScriptable;
-        UpdateFromFirebase(selectedTransform);
-
-        // Additional logic to add or remove from the scriptableObjects list based on the new state
-        if (makeScriptable && !scriptableObjects.Contains(syncObjectComponent.syncObject))
-        {
-            scriptableObjects.Add(syncObjectComponent.syncObject);
-        }
-
-        else if (!makeScriptable && scriptableObjects.Contains(syncObjectComponent.syncObject))
-        {
-            scriptableObjects.Remove(syncObjectComponent.syncObject);
         }
     }
 
@@ -833,6 +812,19 @@ public class SyncScript : MonoBehaviour {
         reference.Child(key).SetRawJsonValueAsync(JsonUtility.ToJson(newObject));
     }
 
+    public void MakeObjectScriptable(Transform selectedTransform, bool makeScriptable)
+    {
+        if (selectedTransform != null)
+        {
+            var syncObjectComponent = selectedTransform.GetComponent<SynchronousObject>();
+            if (syncObjectComponent != null)
+            {
+                syncObjectComponent.syncObject.isScriptable = makeScriptable;
+                UpdateFromFirebase(selectedTransform);
+            }
+        }
+    }
+
     public static void UpdateFromFirebase(Transform selection = null)
     {
         if (selection != null)
@@ -849,7 +841,6 @@ public class SyncScript : MonoBehaviour {
             {
                 if (Instance.selectedObject.transform.GetChild(1).GetComponent<TextMeshPro>().text != null)
                 {
-
                     editedObject.text = Instance.selectedObject.transform.GetChild(1).GetComponent<TextMeshPro>().text;
                 }
             }
@@ -872,36 +863,63 @@ public class SyncScript : MonoBehaviour {
         }
 
         editedObject.positions = new List<float>
-        {
-            Instance.selectedObject.transform.position.x,
-            Instance.selectedObject.transform.position.y,
-            Instance.selectedObject.transform.position.z
-        };
+    {
+        Instance.selectedObject.transform.position.x,
+        Instance.selectedObject.transform.position.y,
+        Instance.selectedObject.transform.position.z
+    };
 
         editedObject.rotations = new List<float>
-        {
-            Instance.selectedObject.transform.rotation.x,
-            Instance.selectedObject.transform.rotation.y,
-            Instance.selectedObject.transform.rotation.z,
-            Instance.selectedObject.transform.rotation.w
-        };
+    {
+        Instance.selectedObject.transform.rotation.x,
+        Instance.selectedObject.transform.rotation.y,
+        Instance.selectedObject.transform.rotation.z,
+        Instance.selectedObject.transform.rotation.w
+    };
 
         editedObject.scales = new List<float>
-        {
-            Instance.selectedObject.transform.localScale.x,
-            Instance.selectedObject.transform.localScale.y,
-            Instance.selectedObject.transform.localScale.z,
-        };
+    {
+        Instance.selectedObject.transform.localScale.x,
+        Instance.selectedObject.transform.localScale.y,
+        Instance.selectedObject.transform.localScale.z,
+    };
 
         string objectToJson = JsonUtility.ToJson(editedObject);
-        Instance.selectedObject.GetComponent<SynchronousObject>().syncObject = editedObject;
-        Instance.reference.Child("users").Child(AuthScript.user.UserId).Child(editedObject.uid).SetRawJsonValueAsync(objectToJson);
+        DatabaseReference reference = FirebaseDatabase.DefaultInstance.GetReference("users").Child(AuthScript.user.UserId).Child("worlds").Child(Instance.currentWorldId).Child("objects");
+        reference.Child(editedObject.uid).SetRawJsonValueAsync(objectToJson).ContinueWith(task =>
+        {
+            if (task.IsCompleted)
+            {
+                Debug.Log("Object updated successfully in Firebase.");
+            }
+            else
+            {
+                Debug.LogError("Error updating object in Firebase: " + task.Exception);
+            }
+        });
     }
+
 
     public void RemoveFromFirebase()
     {
-        SyncObject removeObject = selectedObject.GetComponent<SynchronousObject>().syncObject;
-        reference.Child("users").Child(AuthScript.user.UserId).Child(removeObject.uid).RemoveValueAsync();
+        if (selectedObject != null)
+        {
+            SyncObject syncObject = selectedObject.GetComponent<SynchronousObject>().syncObject;
+            string userId = AuthScript.user.UserId;
+            string path = $"users/{userId}/worlds/{currentWorldId}/objects";
+            DatabaseReference reference = FirebaseDatabase.DefaultInstance.GetReference(path);
+            reference.Child(syncObject.uid).RemoveValueAsync().ContinueWith(task =>
+            {
+                if (task.IsCompleted)
+                {
+                    Debug.Log("Object deleted successfully from Firebase.");
+                }
+                else
+                {
+                    Debug.LogError("Error deleting object from Firebase: " + task.Exception);
+                }
+            });
+        }
     }
 
     public void LoadHomeScene()

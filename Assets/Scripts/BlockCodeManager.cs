@@ -39,7 +39,7 @@ public class BlockCodeManager : MonoBehaviour {
         if (string.IsNullOrEmpty(firebaseKey))
         {
             // No key yet, create new data entry
-            firebaseKey = databaseReference.Child("users").Child(AuthScript.user.UserId).Push().Key;
+            firebaseKey = databaseReference.Child("users").Child(AuthScript.user.UserId).Child("worlds").Child(SyncScript.Instance.currentWorldId).Child("objects").Push().Key;
             PlayerPrefs.SetString("firebaseKey", firebaseKey); // Save the key locally
             PlayerPrefs.Save();
         }
@@ -60,7 +60,7 @@ public class BlockCodeManager : MonoBehaviour {
         };
 
         string objectToJson = JsonUtility.ToJson(newObject);
-        databaseReference.Child("users").Child(AuthScript.user.UserId).Child(firebaseKey).SetRawJsonValueAsync(objectToJson).ContinueWith(task => { });
+        databaseReference.Child("users").Child(AuthScript.user.UserId).Child("worlds").Child(SyncScript.Instance.currentWorldId).Child("objects").Child(firebaseKey).SetRawJsonValueAsync(objectToJson).ContinueWith(task => { });
     }
 
     private void LoadFirebaseKey()
@@ -77,7 +77,7 @@ public class BlockCodeManager : MonoBehaviour {
     {
         string userId = AuthScript.user.UserId;
         var task = FirebaseDatabase.DefaultInstance
-            .GetReference($"users/{userId}")
+            .GetReference($"users/{userId}/worlds/{SyncScript.Instance.currentWorldId}/objects")
             .OrderByChild("addressableKey")
             .EqualTo("blockCode")
             .GetValueAsync();

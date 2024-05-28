@@ -6,10 +6,8 @@ using MG_BlocksEngine2.Core;
 using MG_BlocksEngine2.Environment;
 using MG_BlocksEngine2.Utils;
 
-namespace MG_BlocksEngine2.Block.Instruction
-{
-    public class BE2_InstructionBase : MonoBehaviour, I_BE2_InstructionBase
-    {
+namespace MG_BlocksEngine2.Block.Instruction {
+    public class BE2_InstructionBase : MonoBehaviour, I_BE2_InstructionBase {
         I_BE2_BlockLayout _blockLayout;
         I_BE2_BlockSection[] _sectionsList;
         I_BE2_BlockSectionHeader _section0header;

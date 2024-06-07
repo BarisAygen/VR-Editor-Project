@@ -11,14 +11,11 @@ public class AuthScript : MonoBehaviour {
     [SerializeField] private TMP_InputField sign_up_email;
     [SerializeField] private TMP_InputField sing_up_password;
     [SerializeField] private TMP_InputField sing_up_password_re;
-
     [SerializeField] private TextMeshProUGUI signInStatusText;
     [SerializeField] private TextMeshProUGUI signUpStatusText;
     [SerializeField] private TextMeshProUGUI generalStatusText;
-
     [SerializeField] private GameObject signIn;
     [SerializeField] private GameObject signUp;
-
     private FirebaseAuth auth;
     public static FirebaseUser user;
 

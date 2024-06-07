@@ -489,7 +489,7 @@ public class SyncScript : MonoBehaviour {
         scrollViews.Add("vehicle", vehicleScrollView);
         scrollViews.Add("terrain", terrainScrollView);
         scrollViews.Add("custom", customScrollView);
-        StartCoroutine(InitializeWorldData());
+        // StartCoroutine(InitializeWorldData());
     }
 
     private IEnumerator InitializeWorldData()

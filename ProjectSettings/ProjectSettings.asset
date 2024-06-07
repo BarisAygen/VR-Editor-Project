@@ -790,7 +790,7 @@ PlayerSettings:
   webGLPowerPreference: 2
   scriptingDefineSymbols:
     13: 
-    Standalone: 
+    Standalone: UNITY_MOBILE_MODE
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

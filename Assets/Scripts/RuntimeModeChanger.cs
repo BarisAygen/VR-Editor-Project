@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -39,3 +40,4 @@ public class RuntimeModeChange : MonoBehaviour {
         return currentDefines.Contains(mobileDefine);
     }
 }
+#endif

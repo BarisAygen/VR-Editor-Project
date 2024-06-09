@@ -11,7 +11,6 @@ public class WorldData {
     public string name;
     public string creationDate;
     public string worldId;
-
 }
 
 public class WorldManager : MonoBehaviour {
@@ -34,11 +33,11 @@ public class WorldManager : MonoBehaviour {
             createWorldButton.onClick.AddListener(CreateNewWorld);
         }
 
-        if (copyWorldIdButton != null)
-        {
-            copyWorldIdButton.onClick.AddListener(CopyWorldIdToClipboard);
+        //if (copyWorldIdButton != null)
+       // {
+        ///    copyWorldIdButton.onClick.AddListener(CopyWorldIdToClipboard);
 
-        }
+       // }
 
         if (loadSharedWorldButton != null)
         {
@@ -72,7 +71,7 @@ public class WorldManager : MonoBehaviour {
 
     private void ClearCurrentWorldData()
     {
-        SyncScript.Instance.ClearCurrentWorldData();
+        SyncScript.ClearCurrentWorldData();
     }
 
     private void FetchAndDisplayWorlds()
@@ -222,7 +221,7 @@ public class WorldManager : MonoBehaviour {
                         var worldData = JsonUtility.FromJson<WorldData>(snapshot.GetRawJsonValue());
                         Debug.Log($"World Data: {worldData}");
 
-                        SyncScript.Instance.InitializeWorld(worldData);
+                        InitializeWorld(worldData);
                         Debug.Log("Initializing world in SyncScript.");
 
                         Debug.Log("Loading the scene 'Main'.");
@@ -237,13 +236,14 @@ public class WorldManager : MonoBehaviour {
         });
     }
 
-
-
-    public void CopyWorldIdToClipboard()
+    public void InitializeWorld(WorldData worldData)
     {
-        currentWorldId = PlayerPrefs.GetString("CurrentWorldId", "");
-        GUIUtility.systemCopyBuffer = currentWorldId;
-        Debug.Log("World ID copied to clipboard: " + currentWorldId);
+        Debug.Log($"Initializing world with ID: {worldData.worldId}");
+
+        currentWorldId = worldData.worldId;
+        PlayerPrefs.SetString("CurrentWorldId", currentWorldId);
+        PlayerPrefs.Save();
+        Debug.Log("World ID set in PlayerPrefs.");
     }
 
     public void LoadSharedWorld()

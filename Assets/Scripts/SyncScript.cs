@@ -269,28 +269,12 @@ public class SyncScript : MonoBehaviour {
         }
     }
 
-    public void ClearCurrentWorldData()
+    public static void ClearCurrentWorldData()
     {
         foreach (SynchronousObject obj in FindObjectsOfType<SynchronousObject>())
         {
             Destroy(obj.gameObject);
         }
-    }
-
-    public void InitializeWorld(WorldData worldData)
-    {
-        Debug.Log($"Initializing world with ID: {worldData.worldId}");
-
-        currentWorldId = worldData.worldId;
-        PlayerPrefs.SetString("CurrentWorldId", currentWorldId);
-        PlayerPrefs.Save();
-
-        Debug.Log("World ID set in PlayerPrefs.");
-
-        SetDatabaseSync(); // Ensure this method updates or resets the scene based on the new world's data
-
-        // Add a log to confirm this method completes
-        Debug.Log("Database sync set up.");
     }
 
     void LoadAddressableObject(string key, SyncObject newItemToScene, Vector3 position, Quaternion rotation, Vector3 scale, Color color)
@@ -375,6 +359,13 @@ public class SyncScript : MonoBehaviour {
                 pendingParenting.Remove(item.Key);  // Remove the resolved item from the pending list
             }
         }
+    }
+
+    public void CopyWorldIdToClipboard()
+    {
+        currentWorldId = PlayerPrefs.GetString("CurrentWorldId", "");
+        GUIUtility.systemCopyBuffer = currentWorldId;
+        Debug.Log("World ID copied to clipboard: " + currentWorldId);
     }
 
     #region Mobile

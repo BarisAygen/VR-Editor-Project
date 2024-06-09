@@ -16,11 +16,69 @@ public class BlockCodeManager : MonoBehaviour {
     public GameObject blockCodeCanvas;
     private string firebaseKey;
 
+    public static BlockCodeManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private void Start()
     {
         loadButton.onClick.AddListener(UploadBlockCodeToFirebase);
         databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
         LoadFirebaseKey();
+    }
+
+    public void OnLoadButtonClicked()
+    {
+        StartCoroutine(LoadBlockCodeFromFirebase());
+    }
+
+    public IEnumerator LoadBlockCodeFromFirebase()
+    {
+        string userId = AuthScript.user.UserId;
+        var task = FirebaseDatabase.DefaultInstance
+            .GetReference($"users/{userId}/worlds/{SyncScript.Instance.currentWorldId}/objects")
+            .OrderByChild("addressableKey")
+            .EqualTo("blockCode")
+            .GetValueAsync();
+
+        yield return new WaitUntil(() => task.IsCompleted); // Wait for Firebase task to complete
+
+        if (task.Exception == null)
+        {
+            DataSnapshot snapshot = task.Result;
+            if (snapshot.Exists && snapshot.ChildrenCount > 0)
+            {
+                foreach (DataSnapshot childSnapshot in snapshot.Children)
+                {
+                    SyncObject syncObject = JsonUtility.FromJson<SyncObject>(childSnapshot.GetRawJsonValue());
+                    if (syncObject.addressableKey == "blockCode")
+                    {
+                        DeserializeAndLoadBlockCode(syncObject.blockCodeXML, childSnapshot.Key);
+                        ExecuteWhenPlayClicked(); // Automatically execute the block code
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void ExecuteWhenPlayClicked()
+    {
+        var whenPlayClickedInstruction = FindObjectOfType<BE2_Ins_WhenPlayClicked>();
+        if (whenPlayClickedInstruction != null)
+        {
+            whenPlayClickedInstruction.Function(); // Execute the block code
+        }
     }
 
     public void ToggleBlockCodeVisibility()
@@ -66,40 +124,6 @@ public class BlockCodeManager : MonoBehaviour {
     private void LoadFirebaseKey()
     {
         firebaseKey = PlayerPrefs.GetString("firebaseKey", "");
-    }
-
-    public void OnLoadButtonClicked()
-    {
-        StartCoroutine(LoadBlockCodeFromFirebase());
-    }
-
-    public IEnumerator LoadBlockCodeFromFirebase()
-    {
-        string userId = AuthScript.user.UserId;
-        var task = FirebaseDatabase.DefaultInstance
-            .GetReference($"users/{userId}/worlds/{SyncScript.Instance.currentWorldId}/objects")
-            .OrderByChild("addressableKey")
-            .EqualTo("blockCode")
-            .GetValueAsync();
-
-        yield return new WaitUntil(() => task.IsCompleted); // Wait for Firebase task to complete
-
-        if (task.Exception == null)
-        {
-            DataSnapshot snapshot = task.Result;
-            if (snapshot.Exists && snapshot.ChildrenCount > 0)
-            {
-                foreach (DataSnapshot childSnapshot in snapshot.Children)
-                {
-                    SyncObject syncObject = JsonUtility.FromJson<SyncObject>(childSnapshot.GetRawJsonValue());
-                    if (syncObject.addressableKey == "blockCode")
-                    {
-                        DeserializeAndLoadBlockCode(syncObject.blockCodeXML, childSnapshot.Key);
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     private void DeserializeAndLoadBlockCode(string serializedBlockCode, string uid)

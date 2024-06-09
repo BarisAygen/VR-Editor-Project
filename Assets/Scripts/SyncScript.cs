@@ -376,7 +376,7 @@ public class SyncScript : MonoBehaviour {
     {
         if(allCanvas != null)
         {
-            allCanvas.SetActive(false);
+            //allCanvas.SetActive(false);
         }
 
         if (instance != null)
@@ -388,9 +388,17 @@ public class SyncScript : MonoBehaviour {
         instance = this;
 
         StartCoroutine(CheckAndFixFirebaseStatus());
+        StartCoroutine(InitializeMobileMode());
 #if !UNITY_EDITOR
         StartCoroutine(StartXRCoroutine());
 #endif
+    }
+
+    private IEnumerator InitializeMobileMode()
+    {
+        yield return CheckAndFixFirebaseStatus();
+        yield return StartCoroutine(BlockCodeManager.Instance.LoadBlockCodeFromFirebase());
+        BlockCodeManager.Instance.OnLoadButtonClicked(); // This will upload and then run the block code
     }
 
 #if !UNITY_EDITOR

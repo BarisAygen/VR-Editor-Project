@@ -792,7 +792,7 @@ PlayerSettings:
   scriptingDefineSymbols:
     13: 
     Android: 
-    Standalone: UNITY_MOBILE_MODE
+    Standalone: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

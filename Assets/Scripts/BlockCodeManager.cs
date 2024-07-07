@@ -42,8 +42,14 @@ public class BlockCodeManager : MonoBehaviour {
         StartCoroutine(LoadBlockCodeFromFirebase());
     }
 
+    public void OnUploadButtonClicked()
+    {
+        UploadBlockCodeToFirebase();
+    }
+
     public IEnumerator LoadBlockCodeFromFirebase()
     {
+        Debug.Log("hi");
         string userId = AuthScript.user.UserId;
         var task = FirebaseDatabase.DefaultInstance
             .GetReference($"users/{userId}/worlds/{SyncScript.Instance.currentWorldId}/objects")

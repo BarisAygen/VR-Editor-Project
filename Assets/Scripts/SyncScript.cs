@@ -1,6 +1,7 @@
 using Firebase.Auth;
 using Firebase.Database;
 using Google.XR.Cardboard;
+using MG_BlocksEngine2.Core;
 using MG_BlocksEngine2.Environment;
 using System;
 using System.Collections;
@@ -106,6 +107,7 @@ public class SyncScript : MonoBehaviour {
     [SerializeField] private Image libraryMenuImage;
     [SerializeField] private BE2_ProgrammingEnv programmingEnv;
     [SerializeField] private Canvas helpCanvas;
+    [SerializeField] private BE2_ExecutionManager executionManager;
     public string currentWorldId;
     public string prefabNameToSet;
     public MakeScriptable makeScriptable;
@@ -374,9 +376,9 @@ public class SyncScript : MonoBehaviour {
 
     private void Start()
     {
-        if(allCanvas != null)
+        if (allCanvas != null)
         {
-            //allCanvas.SetActive(false);
+            // allCanvas.SetActive(false);
         }
 
         if (instance != null)
@@ -386,20 +388,14 @@ public class SyncScript : MonoBehaviour {
         }
 
         instance = this;
-
         StartCoroutine(CheckAndFixFirebaseStatus());
-        StartCoroutine(InitializeMobileMode());
+        StartCoroutine(BlockCodeManager.Instance.LoadBlockCodeFromFirebase());
+        executionManager.Play();
 #if !UNITY_EDITOR
         StartCoroutine(StartXRCoroutine());
 #endif
     }
 
-    private IEnumerator InitializeMobileMode()
-    {
-        yield return CheckAndFixFirebaseStatus();
-        yield return StartCoroutine(BlockCodeManager.Instance.LoadBlockCodeFromFirebase());
-        BlockCodeManager.Instance.OnLoadButtonClicked(); // This will upload and then run the block code
-    }
 
 #if !UNITY_EDITOR
     private void Update()

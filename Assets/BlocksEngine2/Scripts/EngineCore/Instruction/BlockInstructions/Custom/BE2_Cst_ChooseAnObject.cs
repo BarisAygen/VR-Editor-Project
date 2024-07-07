@@ -89,7 +89,7 @@ public class BE2_Cst_ChooseAnObject : BE2_InstructionBase, I_BE2_Instruction {
         }
     }
 
-    void FetchDataFromFirebase()
+    public void FetchDataFromFirebase()
     {
         List<SynchronousObject> syncObjects = new(FindObjectsOfType<SynchronousObject>());
         List<string> dropdownOptions = new List<string>();

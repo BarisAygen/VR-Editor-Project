@@ -102,11 +102,16 @@ public class SyncScript : MonoBehaviour {
     [SerializeField] private GameObject buttonBuildingSection;
     [SerializeField] private GameObject buttonItemSection;
     [SerializeField] private GameObject buttonVehicleSection;
-    [SerializeField] private GameObject libraryCanvas;
+    [SerializeField] private Canvas mainCanvas;
+    [SerializeField] private Canvas libraryCanvas;
+    [SerializeField] private Canvas rightClickCanvas;
+    [SerializeField] private GameObject blockEngineScrollView1;
+    [SerializeField] private GameObject blockEngineScrollView2;
+    [SerializeField] private GameObject blockEngineScrollView3;
+    [SerializeField] private Canvas helpCanvas;
     [SerializeField] private Image libraryMenu;
     [SerializeField] private Image libraryMenuImage;
     [SerializeField] private BE2_ProgrammingEnv programmingEnv;
-    [SerializeField] private Canvas helpCanvas;
     [SerializeField] private BE2_ExecutionManager executionManager;
     public string currentWorldId;
     public string prefabNameToSet;
@@ -367,7 +372,6 @@ public class SyncScript : MonoBehaviour {
     {
         currentWorldId = PlayerPrefs.GetString("CurrentWorldId", "");
         GUIUtility.systemCopyBuffer = currentWorldId;
-        Debug.Log("World ID copied to clipboard: " + currentWorldId);
     }
 
     #region Mobile
@@ -376,10 +380,16 @@ public class SyncScript : MonoBehaviour {
 
     private void Start()
     {
-        if (allCanvas != null)
-        {
-            // allCanvas.SetActive(false);
-        }
+        mainCanvas.gameObject.SetActive(false);
+        libraryCanvas.gameObject.SetActive(false);
+        rightClickCanvas.gameObject.SetActive(false);
+        helpCanvas.gameObject.SetActive(false);
+        Vector3 currentPosition = blockEngineScrollView1.transform.position;
+        blockEngineScrollView1.transform.position = new Vector3(currentPosition.x - 0, currentPosition.y, currentPosition.z);
+        currentPosition = blockEngineScrollView2.transform.position;
+        blockEngineScrollView2.transform.position = new Vector3(currentPosition.x - 0, currentPosition.y, currentPosition.z);
+        currentPosition = blockEngineScrollView3.transform.position;
+        blockEngineScrollView3.transform.position = new Vector3(currentPosition.x - 0, currentPosition.y, currentPosition.z);
 
         if (instance != null)
         {
@@ -388,12 +398,24 @@ public class SyncScript : MonoBehaviour {
         }
 
         instance = this;
-        StartCoroutine(CheckAndFixFirebaseStatus());
-        StartCoroutine(BlockCodeManager.Instance.LoadBlockCodeFromFirebase());
-        executionManager.Play();
+        StartCoroutine(InitializeAndLoad());
 #if !UNITY_EDITOR
         StartCoroutine(StartXRCoroutine());
 #endif
+    }
+
+    private IEnumerator InitializeAndLoad()
+    {
+        // Ensure Firebase is initialized
+        yield return CheckAndFixFirebaseStatus();
+        yield return new WaitForSeconds(3f);
+
+        // Load block code from Firebase
+        yield return StartCoroutine(BlockCodeManager.Instance.LoadBlockCodeFromFirebase());
+        yield return new WaitForSeconds(3f);
+
+        // Play the loaded block code
+        executionManager.Play();
     }
 
 
@@ -416,28 +438,19 @@ public class SyncScript : MonoBehaviour {
 
     public IEnumerator StartXRCoroutine()
     {
-        Debug.Log("Initializing XR...");
         yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
 
 
-        if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+        if (XRGeneralSettings.Instance.Manager.activeLoader != null)
         {
-            Debug.LogError("Initializing XR Failed. Check Editor or Player log for details.");
-        }
-        else
-        {
-            Debug.Log("Starting XR...");
             XRGeneralSettings.Instance.Manager.StartSubsystems();
         }
     }
 
     void StopXR()
     {
-        Debug.Log("Stopping XR...");
-
         XRGeneralSettings.Instance.Manager.StopSubsystems();
         XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-        Debug.Log("XR stopped completely.");
         Camera.main.ResetAspect();
     }
 
@@ -494,7 +507,7 @@ public class SyncScript : MonoBehaviour {
         SetDatabaseSync();
 
         // Ensure that bubbles are created after all objects are loaded
-        yield return new WaitForSeconds(2); // Wait for 2 seconds to ensure all objects are loaded
+        yield return new WaitForSeconds(3); // Wait for 2 seconds to ensure all objects are loaded
         makeScriptable.InitializeBubblesFromFirebase();
     }
 
@@ -888,10 +901,6 @@ public class SyncScript : MonoBehaviour {
             {
                 Debug.Log("Object updated successfully in Firebase.");
             }
-            else
-            {
-                Debug.LogError("Error updating object in Firebase: " + task.Exception);
-            }
         });
     }
 
@@ -909,10 +918,6 @@ public class SyncScript : MonoBehaviour {
                 if (task.IsCompleted)
                 {
                     Debug.Log("Object deleted successfully from Firebase.");
-                }
-                else
-                {
-                    Debug.LogError("Error deleting object from Firebase: " + task.Exception);
                 }
             });
         }

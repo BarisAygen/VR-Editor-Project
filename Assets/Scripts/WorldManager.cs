@@ -52,20 +52,14 @@ public class WorldManager : MonoBehaviour {
 
         if (dependencyCheck.Exception != null)
         {
-            Debug.LogError("Dependency check failed: " + dependencyCheck.Exception);
             yield break;
         }
 
         var dependencyStatus = dependencyCheck.Result;
         if (dependencyStatus == Firebase.DependencyStatus.Available)
         {
-            Debug.Log("Firebase is ready for use.");
             ClearCurrentWorldData(); // Clear existing objects when starting
             FetchAndDisplayWorlds();
-        }
-        else
-        {
-            Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);
         }
     }
 
@@ -78,11 +72,7 @@ public class WorldManager : MonoBehaviour {
     {
         string userId = AuthScript.user.UserId;
         FirebaseDatabase.DefaultInstance.GetReference($"users/{userId}/worlds").GetValueAsync().ContinueWith(task => {
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Error fetching worlds: " + task.Exception);
-            }
-            else if (task.IsCompleted)
+            if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SelectWorldButtons(snapshot));
@@ -112,9 +102,6 @@ public class WorldManager : MonoBehaviour {
 
     private void DeleteWorldPrompt(string worldId, GameObject buttonObj)
     {
-        // Optional: Show a confirmation dialog before deletion
-        Debug.Log($"Prompt to delete world {worldId}");
-        // If confirmed:
         DeleteWorld(AuthScript.user.UserId, worldId, buttonObj);
     }
 
@@ -132,34 +119,23 @@ public class WorldManager : MonoBehaviour {
                 {
                     if (mappingTask.IsCompleted)
                     {
-                        Debug.Log("World deleted: " + worldId);
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
                             Destroy(buttonObj); // Remove the button from the UI
                         });
                     }
-                    else
-                    {
-                        Debug.LogError("Error deleting world mapping: " + mappingTask.Exception);
-                    }
                 });
-            }
-            else
-            {
-                Debug.LogError("Error deleting world: " + worldTask.Exception);
             }
         });
     }
 
     public void SelectWorld(string worldId)
     {
-        Debug.Log("Selected world: " + worldId);
         LoadWorld(AuthScript.user.UserId, worldId);
     }
 
     public void CreateNewWorld()
     {
-        Debug.Log("Creating new world.");
         string userId = AuthScript.user.UserId;
         var newWorldKey = FirebaseDatabase.DefaultInstance.GetReference("users").Child(userId).Child("worlds").Push().Key;
         string worldName = string.IsNullOrEmpty(newWorldNameInputField.text) ? "New World" : newWorldNameInputField.text;
@@ -180,57 +156,27 @@ public class WorldManager : MonoBehaviour {
                 mappingRef.SetValueAsync(userId).ContinueWith(mappingTask => {
                     if (mappingTask.IsCompleted)
                     {
-                        Debug.Log($"New world {worldData.name} created.");
-                        Debug.Log($"New world {worldData.worldId}");
-                        Debug.Log($"New world {userId}");
+
                         LoadWorld(userId, newWorldKey);
                     }
-                    else
-                    {
-                        Debug.LogError("Failed to update mapping: " + mappingTask.Exception);
-                        // Optional: Handle the failure to write to the mapping node.
-                    }
                 });
-            }
-            else
-            {
-                Debug.LogError("Failed to create world: " + worldTask.Exception);
-                // Optional: Handle the failure to write to the world node.
             }
         });
     }
 
     public void LoadWorld(string userId, string worldId)
     {
-        Debug.Log("Attempting to load world.");
-        Debug.Log($"User ID: {userId}, World ID: {worldId}");
-
         FirebaseDatabase.DefaultInstance.GetReference($"users/{userId}/worlds/{worldId}").GetValueAsync().ContinueWith(task => {
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Error loading data: " + task.Exception);
-            }
-            else if (task.IsCompleted)
+            if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
                 if (snapshot.Exists)
                 {
-                    Debug.Log("Data snapshot retrieved successfully.");
-
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
                         var worldData = JsonUtility.FromJson<WorldData>(snapshot.GetRawJsonValue());
-                        Debug.Log($"World Data: {worldData}");
-
                         InitializeWorld(worldData);
-                        Debug.Log("Initializing world in SyncScript.");
-
-                        Debug.Log("Loading the scene 'Main'.");
                         SceneManager.LoadScene("Main");
                     });
-                }
-                else
-                {
-                    Debug.LogError("No data found for the specified world ID.");
                 }
             }
         });
@@ -238,12 +184,9 @@ public class WorldManager : MonoBehaviour {
 
     public void InitializeWorld(WorldData worldData)
     {
-        Debug.Log($"Initializing world with ID: {worldData.worldId}");
-
         currentWorldId = worldData.worldId;
         PlayerPrefs.SetString("CurrentWorldId", currentWorldId);
         PlayerPrefs.Save();
-        Debug.Log("World ID set in PlayerPrefs.");
     }
 
     public void LoadSharedWorld()
@@ -251,14 +194,9 @@ public class WorldManager : MonoBehaviour {
         string sharedWorldId = sharedWorldIdInputField.text;
         if (!string.IsNullOrEmpty(sharedWorldId))
         {
-            Debug.Log(sharedWorldId + "dunya yukleniyor");
             FirebaseDatabase.DefaultInstance.GetReference($"worldMappings/{sharedWorldId}").GetValueAsync().ContinueWith(task =>
             {
-                if (task.IsFaulted)
-                {
-                    Debug.LogError("Error fetching user ID for shared world: " + task.Exception);
-                }
-                else if (task.IsCompleted)
+                if (task.IsCompleted)
                 {
                     DataSnapshot snapshot = task.Result;
                     if (snapshot.Exists)
@@ -266,17 +204,8 @@ public class WorldManager : MonoBehaviour {
                         string userId = snapshot.Value.ToString();
                         LoadWorld(userId, sharedWorldId);
                     }
-                    else
-                    {
-                        Debug.LogError("Shared world ID not found.");
-                    }
                 }
             });
         }
-        else
-        {
-            Debug.LogError("Shared world ID is empty.");
-        }
     }
-
 }

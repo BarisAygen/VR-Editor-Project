@@ -48,10 +48,6 @@ public class AuthScript : MonoBehaviour {
             yield return new WaitForEndOfFrame();
             StartCoroutine(CheckForAutoLogin());
         }
-        else
-        {
-            Debug.LogError("Could not resolve all dependencies: " + dependencyStatus.ToString());
-        }
     }
 
     void AuthStateChanged(object sender, EventArgs eventArgs)
@@ -59,15 +55,7 @@ public class AuthScript : MonoBehaviour {
         if (auth.CurrentUser != user)
         {
             bool signedIn = user != auth.CurrentUser && auth.CurrentUser != null;
-            if (!signedIn && user != null)
-            {
-                Debug.Log("Signed out " + user.UserId);
-            }
             user = auth.CurrentUser;
-            if (signedIn)
-            {
-                Debug.Log("Signed in " + user.UserId);
-            }
         }
     }
 
@@ -152,11 +140,8 @@ public class AuthScript : MonoBehaviour {
         }
 
         FirebaseUser newUser = taskStatus.Result;
-        Debug.LogFormat("User created successfully: {0} ({1})", newUser.DisplayName, newUser.UserId);
         SendVerificationEmail(newUser);
-
         SetSignUpStatus("Please verify your email by clicking the link we sent to your email address.");
-
         yield return new WaitForEndOfFrame();
         SwitchSignInSignUp();
     }
@@ -236,15 +221,13 @@ public class AuthScript : MonoBehaviour {
         {
             if (task.IsCanceled)
             {
-                Debug.LogError("SendEmailVerificationAsync was canceled.");
                 return;
             }
+
             if (task.IsFaulted)
             {
-                Debug.LogError("SendEmailVerificationAsync encountered an error: " + task.Exception);
                 return;
             }
-            Debug.Log("Email verification sent successfully.");
         });
     }
 

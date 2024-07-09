@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-
 using MG_BlocksEngine2.DragDrop;
 using MG_BlocksEngine2.Core;
 using MG_BlocksEngine2.Environment;
@@ -93,8 +92,55 @@ namespace MG_BlocksEngine2.Core
 
         void Start()
         {
-            // v2.10 - bugfix: update and fixedupdate events were being cleared after receiving listeners
+            // Ensure blocks stack list is updated and ready to execute
             UpdateBlocksStackList();
+        }
+
+        public void Play()
+        {
+            BE2_MainEventsManager.Instance.TriggerEvent(BE2EventTypes.OnPlay);
+            EventSystem.current.SetSelectedGameObject(null);
+            StartCoroutine(ExecuteBlocks());
+        }
+
+        private IEnumerator ExecuteBlocks()
+        {
+            yield return new WaitForSeconds(1f); // Ensure slight delay for proper state setting
+
+            // Ensure blocks are being triggered
+            foreach (var blocksStack in blocksStacksArray)
+            {
+                if (!blocksStack.IsActive)
+                {
+                    blocksStack.Execute();
+                }
+            }
+        }
+
+        // Ensure blocks stack list is updated
+        public void UpdateBlocksStackList()
+        {
+            blocksStacksArray = new I_BE2_BlocksStack[0];
+            int envsCount = _programmingEnvsList.Count;
+            for (int i = 0; i < envsCount; i++)
+            {
+                I_BE2_ProgrammingEnv programmingEnv = _programmingEnvsList[i];
+
+                int childCount = programmingEnv.Transform.childCount;
+                for (int j = 0; j < childCount; j++)
+                {
+                    I_BE2_BlocksStack blocksStack = programmingEnv.Transform.GetChild(j).GetComponent<I_BE2_BlocksStack>();
+                    if (blocksStack != null)
+                    {
+                        BE2_ArrayUtils.Add(ref blocksStacksArray, blocksStack);
+                        blocksStack.TargetObject = programmingEnv.TargetObject;
+
+                        // Add block execution to update list
+                        AddToUpdate(blocksStack.Execute);
+                    }
+                }
+            }
+            BE2_MainEventsManager.Instance.TriggerEvent(BE2EventTypes.OnBlocksStackArrayUpdate);
         }
 
         void Update()
@@ -124,43 +170,10 @@ namespace MG_BlocksEngine2.Core
             OnLateUpdate.Invoke();
         }
 
-        public void Play()
-        {
-            BE2_MainEventsManager.Instance.TriggerEvent(BE2EventTypes.OnPlay);
-            EventSystem.current.SetSelectedGameObject(null);
-        }
-
         public void Stop()
         {
             BE2_MainEventsManager.Instance.TriggerEvent(BE2EventTypes.OnStop);
             EventSystem.current.SetSelectedGameObject(null);
-        }
-
-        // v2.3 - method UpdateBlocksStackList from the Execution Manager made public
-        public void UpdateBlocksStackList()
-        {
-            blocksStacksArray = new I_BE2_BlocksStack[0];
-            int envsCount = _programmingEnvsList.Count;
-            for (int i = 0; i < envsCount; i++)
-            {
-                I_BE2_ProgrammingEnv programmingEnv = _programmingEnvsList[i];
-
-                int childCount = programmingEnv.Transform.childCount;
-                for (int j = 0; j < childCount; j++)
-                {
-                    I_BE2_BlocksStack blocksStack = programmingEnv.Transform.GetChild(j).GetComponent<I_BE2_BlocksStack>();
-                    if (blocksStack != null)
-                    {
-                        BE2_ArrayUtils.Add(ref blocksStacksArray, blocksStack);
-                        blocksStack.TargetObject = programmingEnv.TargetObject;
-
-                        // v2.9 - BlocksStack Execute action is now executed from the OnUpdate event
-                        AddToUpdate(blocksStack.Execute);
-                    }
-                }
-            }
-
-            BE2_MainEventsManager.Instance.TriggerEvent(BE2EventTypes.OnBlocksStackArrayUpdate);
         }
 
         public void AddToBlocksStackArray(I_BE2_BlocksStack blocksStack, I_BE2_TargetObject targetObject)

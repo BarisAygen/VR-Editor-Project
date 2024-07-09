@@ -78,7 +78,6 @@ public class BE2_Cst_ChooseAnObject : BE2_InstructionBase, I_BE2_Instruction {
 
     private void OnDropdownValueChanged(int index)
     {
-        Debug.Log($"Dropdown value changed. Index: {index}");
         if (dropdown.options.Count == 0 || index >= dropdown.options.Count)
             return;
 
@@ -122,7 +121,6 @@ public class BE2_Cst_ChooseAnObject : BE2_InstructionBase, I_BE2_Instruction {
 
     void LoadAndSetTargetObject(string name)
     {
-        Debug.Log($"Loading object: {name}");
         SynchronousObject synchronousObject = FindSynchronousObjectByName(name);
 
         if (synchronousObject != null)
@@ -148,16 +146,12 @@ public class BE2_Cst_ChooseAnObject : BE2_InstructionBase, I_BE2_Instruction {
         {
             _objectLoadedSuccessfully = false;
         }
-        Debug.Log($"LoadAndSetTargetObject called for {name}, object loaded: {_objectLoadedSuccessfully}");
     }
 
     public new void Function()
     {
-        Debug.Log($"Function called. Object loaded: {_objectLoadedSuccessfully}");
         if (_objectLoadedSuccessfully)
         {
-            if (programmingEnv.targetObject.AddressableKey != null) { Debug.Log($"chose the object with Addressable Key: {programmingEnv.targetObject.AddressableKey}"); }
-
             ExecuteNextInstruction();
         }
     }

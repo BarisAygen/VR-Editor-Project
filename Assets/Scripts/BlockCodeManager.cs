@@ -32,7 +32,6 @@ public class BlockCodeManager : MonoBehaviour {
 
     private void Start()
     {
-        loadButton.onClick.AddListener(UploadBlockCodeToFirebase);
         databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
         LoadFirebaseKey();
     }
@@ -49,7 +48,6 @@ public class BlockCodeManager : MonoBehaviour {
 
     public IEnumerator LoadBlockCodeFromFirebase()
     {
-        Debug.Log("hi");
         string userId = AuthScript.user.UserId;
         var task = FirebaseDatabase.DefaultInstance
             .GetReference($"users/{userId}/worlds/{SyncScript.Instance.currentWorldId}/objects")
@@ -58,7 +56,6 @@ public class BlockCodeManager : MonoBehaviour {
             .GetValueAsync();
 
         yield return new WaitUntil(() => task.IsCompleted); // Wait for Firebase task to complete
-
         if (task.Exception == null)
         {
             DataSnapshot snapshot = task.Result;
@@ -70,20 +67,10 @@ public class BlockCodeManager : MonoBehaviour {
                     if (syncObject.addressableKey == "blockCode")
                     {
                         DeserializeAndLoadBlockCode(syncObject.blockCodeXML, childSnapshot.Key);
-                        ExecuteWhenPlayClicked(); // Automatically execute the block code
                         break;
                     }
                 }
             }
-        }
-    }
-
-    private void ExecuteWhenPlayClicked()
-    {
-        var whenPlayClickedInstruction = FindObjectOfType<BE2_Ins_WhenPlayClicked>();
-        if (whenPlayClickedInstruction != null)
-        {
-            whenPlayClickedInstruction.Function(); // Execute the block code
         }
     }
 

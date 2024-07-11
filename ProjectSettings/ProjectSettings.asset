@@ -791,8 +791,8 @@ PlayerSettings:
   webGLPowerPreference: 2
   scriptingDefineSymbols:
     13: 
-    Android: 
-    Standalone: UNITY_MOBILE_MODE
+    Android: UNITY_MOBILE_MODE
+    Standalone: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

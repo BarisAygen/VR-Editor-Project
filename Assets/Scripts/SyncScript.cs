@@ -12,6 +12,7 @@ using Unity.VideoHelper;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.EventSystems;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -385,11 +386,11 @@ public class SyncScript : MonoBehaviour {
         rightClickCanvas.gameObject.SetActive(false);
         helpCanvas.gameObject.SetActive(false);
         Vector3 currentPosition = blockEngineScrollView1.transform.position;
-        blockEngineScrollView1.transform.position = new Vector3(currentPosition.x - 0, currentPosition.y, currentPosition.z);
+        blockEngineScrollView1.transform.position = new Vector3(currentPosition.x - 3000, currentPosition.y, currentPosition.z);
         currentPosition = blockEngineScrollView2.transform.position;
-        blockEngineScrollView2.transform.position = new Vector3(currentPosition.x - 0, currentPosition.y, currentPosition.z);
+        blockEngineScrollView2.transform.position = new Vector3(currentPosition.x - 3000, currentPosition.y, currentPosition.z);
         currentPosition = blockEngineScrollView3.transform.position;
-        blockEngineScrollView3.transform.position = new Vector3(currentPosition.x - 0, currentPosition.y, currentPosition.z);
+        blockEngineScrollView3.transform.position = new Vector3(currentPosition.x - 3000, currentPosition.y, currentPosition.z);
 
         if (instance != null)
         {
@@ -413,9 +414,10 @@ public class SyncScript : MonoBehaviour {
         // Load block code from Firebase
         yield return StartCoroutine(BlockCodeManager.Instance.LoadBlockCodeFromFirebase());
         yield return new WaitForSeconds(3f);
-
+        Debug.Log("Calling Play method in BE2_ExecutionManager");
         // Play the loaded block code
         executionManager.Play();
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
 

@@ -98,20 +98,23 @@ namespace MG_BlocksEngine2.Core
 
         public void Play()
         {
+            Debug.Log("Play method called in BE2_ExecutionManager");
             BE2_MainEventsManager.Instance.TriggerEvent(BE2EventTypes.OnPlay);
-            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(null); // Ensure no game object is selected
             StartCoroutine(ExecuteBlocks());
         }
 
         private IEnumerator ExecuteBlocks()
         {
             yield return new WaitForSeconds(1f); // Ensure slight delay for proper state setting
+            Debug.Log("Starting block execution");
 
             // Ensure blocks are being triggered
             foreach (var blocksStack in blocksStacksArray)
             {
                 if (!blocksStack.IsActive)
                 {
+                    Debug.Log($"Executing block stack: {blocksStack}");
                     blocksStack.Execute();
                 }
             }
